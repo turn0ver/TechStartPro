@@ -4,68 +4,52 @@ package org.joseprendin.springcrud.controller;
 
 import org.joseprendin.springcrud.entity.Product;
 import org.joseprendin.springcrud.repository.ProductRepository;
+import org.joseprendin.springcrud.service.ProductService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.validation.BindingResult;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PathVariable;
-import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.*;
 
 import javax.validation.Valid;
 
-@Controller
+@CrossOrigin("*")
+@RestController
+@RequestMapping("product")
 public class ProductController {
 
     private final ProductRepository productRepository;
 
     @Autowired
+    private ProductService productService;
+    @Autowired
     public ProductController(ProductRepository productRepository) {
         this.productRepository = productRepository;
     }
 
-    @GetMapping("/new")
-    public String showCreateProduct(Product product) {
-        return "create-product";
+    @GetMapping
+    public Iterable<Product> getAll() {
+        return productService.getAll();
     }
 
-    @GetMapping("/edit/{id}")
-    public String showUpdateProduct(@PathVariable ("id") long id, Model model) {
-        Product product = productRepository.findById(id).orElseThrow(() -> new IllegalArgumentException("Invalid product Id:" + id));
-        model.addAttribute("product", product);
-        return "update-product";
-    }
-
-    @GetMapping("/delete/{id}")
-    public String showDeleteProduct(@PathVariable("id") long id, Model model) {
-        Product product = productRepository.findById(id).orElseThrow(() -> new IllegalArgumentException("Invalid product Id:" + id));
-        productRepository.delete(product);
-        model.addAttribute("products", productRepository.findAll());
-        return "index";
+    @GetMapping("/{id}")
+    public Product addById(@PathVariable long id) {
+        return productService.findById(id);
     }
 
     @PostMapping("/add")
-    public String addProduct(@Valid Product product, BindingResult result, Model model) {
-        if (result.hasErrors()) {
-            return "add-product";
-        }
-
-        productRepository.save(product);
-        model.addAttribute("products", productRepository.findAll());
-
-        return "index";
+    public Product createProduct(@RequestBody Product product) {
+        return productService.createProduct(product);
     }
 
-    @PostMapping("/update/{id}")
-    public String updateUser(@PathVariable("id") long id, @Valid Product product, BindingResult result, Model model) {
-        if (result.hasErrors()) {
-            product.setId(id);
-            return "update-customer";
-        }
+    @DeleteMapping("/{id}")
+    public void removeProduct(@PathVariable Long id) {
+        productService.removeById(id);
+    }
 
-        productRepository.save(product);
-        model.addAttribute("products", productRepository.findAll());
-        return "index";
+    @PutMapping("/{id}")
+    public Product updateProduct(@RequestBody Product product, @PathVariable Long id) {
+        return productService.updateProduct(product);
     }
 
 
